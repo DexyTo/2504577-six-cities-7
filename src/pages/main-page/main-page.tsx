@@ -121,7 +121,10 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
               <PlaceCardsList offers={offers} onCardHover={setActiveCardId} />
             </section>
             <div className="cities__right-section">
-              <section className="cities__map map"></section>
+              <section
+                className="cities__map map"
+                data-active-offer-id={activeCardId}
+              ></section>
             </div>
           </div>
         </div>
