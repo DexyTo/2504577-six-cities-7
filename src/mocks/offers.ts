@@ -1,5 +1,4 @@
-import { Offer } from "../const";
-
+import { Offer } from '../const';
 
 export const offers: Offer[] = [
   {

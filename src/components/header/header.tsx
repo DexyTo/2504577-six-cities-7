@@ -12,9 +12,10 @@ function Header({
   favoriteCount = 0,
 }: HeaderProps): JSX.Element {
   const { pathname } = useLocation();
+  const route = pathname as AppRoute;
 
-  const isMainPage = pathname === AppRoute.Main;
-  const isLoginPage = pathname === AppRoute.Login;
+  const isMainPage = route === AppRoute.Main;
+  const isLoginPage = route === AppRoute.Login;
   const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
 
   return (

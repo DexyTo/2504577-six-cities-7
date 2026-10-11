@@ -124,7 +124,8 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
               <section
                 className="cities__map map"
                 data-active-offer-id={activeCardId}
-              ></section>
+              >
+              </section>
             </div>
           </div>
         </div>

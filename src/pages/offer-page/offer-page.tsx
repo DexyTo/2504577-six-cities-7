@@ -21,7 +21,7 @@ function OfferPage({ offers }: OfferPageProps): JSX.Element {
   const nearbyOffers = offers
     .filter((nearbyOffer) => nearbyOffer.id !== offer.id)
     .slice(0, 3);
-  const favoriteCount = offers.filter((offer) => offer.inBookmarks).length;
+  const favoriteCount = offers.filter((item) => item.inBookmarks).length;
 
   return (
     <div className="page">
