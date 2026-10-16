@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
-
+import Map from '../../components/map/map';
 import { AppRoute, Offer } from '../../const';
+import { AMSTERDAM } from '../../mocks/city';
 
 type MainPageProps = {
   offers: Offer[];
@@ -20,6 +20,7 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
   ];
 
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
+  const cityOffers = offers.filter((offer) => offer.city === AMSTERDAM.name);
 
   return (
     <div className="page page--gray page--main">
@@ -91,7 +92,7 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
           <div className="cities__places-container container">
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
-              <b className="places__found">312 places to stay in Amsterdam</b>
+              <b className="places__found">{cityOffers.length} places to stay in {AMSTERDAM.name}</b>
               <form className="places__sorting" action="#" method="get">
                 <span className="places__sorting-caption">Sort by</span>
                 <span className="places__sorting-type" tabIndex={0}>
@@ -118,14 +119,10 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
                   </li>
                 </ul>
               </form>
-              <PlaceCardsList offers={offers} onCardHover={setActiveCardId} />
+              <PlaceCardsList offers={cityOffers} onCardHover={setActiveCardId} />
             </section>
             <div className="cities__right-section">
-              <section
-                className="cities__map map"
-                data-active-offer-id={activeCardId}
-              >
-              </section>
+              <Map city={AMSTERDAM} offers={cityOffers} activeOfferId={activeCardId} />
             </div>
           </div>
         </div>

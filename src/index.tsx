@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-
 import App from './app';
-
 import { offers } from './mocks/offers';
 
 const root = ReactDOM.createRoot(

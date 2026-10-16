@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-
 import { AppRoute, AuthorizationStatus } from '../../const';
+import cn from 'classnames';
 
 type HeaderProps = {
   authorizationStatus: AuthorizationStatus;
@@ -12,10 +12,9 @@ function Header({
   favoriteCount = 0,
 }: HeaderProps): JSX.Element {
   const { pathname } = useLocation();
-  const route = pathname as AppRoute;
 
-  const isMainPage = route === AppRoute.Main;
-  const isLoginPage = route === AppRoute.Login;
+  const isMainPage = pathname === String(AppRoute.Main);
+  const isLoginPage = pathname === String(AppRoute.Login);
   const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
 
   return (
@@ -24,9 +23,9 @@ function Header({
         <div className="header__wrapper">
           <div className="header__left">
             <Link
-              className={`header__logo-link${
-                isMainPage ? ' header__logo-link--active' : ''
-              }`}
+              className={cn('header__logo-link', {
+                'header__logo-link--active': isMainPage,
+              })}
               to={AppRoute.Main}
             >
               <img

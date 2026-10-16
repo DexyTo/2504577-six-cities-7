@@ -16,9 +16,21 @@ export type Host = {
   isPro: boolean;
 };
 
+export type Location = {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+};
+
+export type City = {
+  name: string;
+  location: Location;
+};
+
 export type Offer = {
   id: number;
   city: string;
+  location: Location;
   premium: boolean;
   name: string;
   img: string;

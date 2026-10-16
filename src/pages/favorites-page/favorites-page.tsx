@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
-
 import { AppRoute, Offer } from '../../const';
 
 type FavoritesPageProps = {

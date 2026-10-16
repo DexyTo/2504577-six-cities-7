@@ -1,8 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import NotFoundPage from '../not-found-page/not-found-page';
-
 import { AppRoute, Offer } from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
 

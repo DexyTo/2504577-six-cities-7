@@ -1,5 +1,5 @@
-import { Offer } from '../../const';
-import PlaceCard, { PlaceCardType } from '../place-card/place-card';
+import type { Offer } from '../../const';
+import PlaceCard, { type PlaceCardType } from '../place-card/place-card';
 
 type PlaceCardsListProps = {
   offers: Offer[];
