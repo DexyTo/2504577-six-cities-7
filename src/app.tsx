@@ -5,18 +5,21 @@ import FavoritesPage from './pages/favorites-page/favorites-page';
 import OfferPage from './pages/offer-page/offer-page';
 import NotFoundPage from './pages/not-found-page/not-found-page';
 import PrivateRoute from './components/private-route/private-route';
-import { AppRoute, AuthorizationStatus, Offer, Review } from './const';
+import { AppRoute, AuthorizationStatus, ReviewData } from './const';
+import { useAppSelector } from './hooks';
+import { getOffers } from './store/selectors';
 
 type AppProps = {
-  offers: Offer[];
-  reviews: Review[];
+  reviews: ReviewData[];
 };
 
-export default function App({ offers, reviews }: AppProps): JSX.Element {
+export default function App({ reviews }: AppProps): JSX.Element {
+  const offers = useAppSelector(getOffers);
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path={AppRoute.Main} element={<MainPage offers={offers} />} />
+        <Route path={AppRoute.Main} element={<MainPage />} />
         <Route path={AppRoute.Login} element={<LoginPage />} />
         <Route
           path={AppRoute.Favorites}

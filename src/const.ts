@@ -16,7 +16,7 @@ export type Host = {
   isPro: boolean;
 };
 
-export type Review = {
+export type ReviewData = {
   id: number;
   offerId: number;
   user: {
