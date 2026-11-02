@@ -1,4 +1,4 @@
-import type { Review as ReviewData } from '../../const';
+import type { ReviewData } from '../../const';
 
 type ReviewProps = {
   review: ReviewData;

@@ -4,12 +4,12 @@ import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import ReviewsList from '../../components/reviews-list/reviews-list';
 import Map from '../../components/map/map';
 import NotFoundPage from '../not-found-page/not-found-page';
-import { AppRoute, Offer, Review } from '../../const';
+import { AppRoute, Offer, ReviewData } from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
 
 type OfferPageProps = {
   offers: Offer[];
-  reviews: Review[];
+  reviews: ReviewData[];
 };
 
 function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
@@ -22,7 +22,7 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
   }
 
   const nearbyOffers = offers
-    .filter((nearbyOffer) => nearbyOffer.id !== offer.id)
+    .filter((nearbyOffer) => nearbyOffer.id !== offer.id && nearbyOffer.city.name === offer.city.name)
     .slice(0, 3);
   const favoriteCount = offers.filter((item) => item.inBookmarks).length;
   const offerReviews = reviews.filter((review) => review.offerId === offer.id);

@@ -2,25 +2,24 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import Map from '../../components/map/map';
-import { AppRoute, Offer } from '../../const';
-import { AMSTERDAM } from '../../mocks/city';
+import CitiesList from '../../components/cities-list/cities-list';
+import { AppRoute, City } from '../../const';
+import { CITIES } from '../../cities';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { changeCity } from '../../store/action';
+import { getCity, getCityOffers, getOffers } from '../../store/selectors';
 
-type MainPageProps = {
-  offers: Offer[];
-};
-
-function MainPage({ offers }: MainPageProps): JSX.Element {
-  const cities = [
-    'Paris',
-    'Cologne',
-    'Brussels',
-    'Amsterdam',
-    'Hamburg',
-    'Dusseldorf',
-  ];
-
+function MainPage(): JSX.Element {
+  const dispatch = useAppDispatch();
+  const city = useAppSelector(getCity);
+  const offers = useAppSelector(getOffers);
+  const cityOffers = useAppSelector(getCityOffers);
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
-  const cityOffers = offers.filter((offer) => offer.city.name === AMSTERDAM.name);
+
+  const handleCityChange = (selectedCity: City) => {
+    dispatch(changeCity(selectedCity));
+    setActiveCardId(null);
+  };
 
   return (
     <div className="page page--gray page--main">
@@ -72,27 +71,14 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
         <h1 className="visually-hidden">Cities</h1>
         <div className="tabs">
           <section className="locations container">
-            <ul className="locations__list tabs__list">
-              {cities.map((city) => (
-                <li key={city} className="locations__item">
-                  <a
-                    className={`locations__item-link tabs__item${
-                      city === 'Amsterdam' ? ' tabs__item--active' : ''
-                    }`}
-                    href="#"
-                  >
-                    <span>{city}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <CitiesList cities={CITIES} selectedCity={city} onCityChange={handleCityChange} />
           </section>
         </div>
         <div className="cities">
           <div className="cities__places-container container">
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
-              <b className="places__found">{cityOffers.length} places to stay in {AMSTERDAM.name}</b>
+              <b className="places__found">{cityOffers.length} places to stay in {city.name}</b>
               <form className="places__sorting" action="#" method="get">
                 <span className="places__sorting-caption">Sort by</span>
                 <span className="places__sorting-type" tabIndex={0}>
@@ -122,7 +108,7 @@ function MainPage({ offers }: MainPageProps): JSX.Element {
               <PlaceCardsList offers={cityOffers} onCardHover={setActiveCardId} />
             </section>
             <div className="cities__right-section">
-              <Map city={AMSTERDAM} offers={cityOffers} activeOfferId={activeCardId} />
+              <Map key={city.name} city={city} offers={cityOffers} activeOfferId={activeCardId} />
             </div>
           </div>
         </div>
