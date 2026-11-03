@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import Map from '../../components/map/map';
 import CitiesList from '../../components/cities-list/cities-list';
-import { AppRoute, City } from '../../const';
+import SortingOptions from '../../components/sorting-options/sorting-options';
+import { AppRoute, City, SortType } from '../../const';
 import { CITIES } from '../../cities';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { changeCity } from '../../store/action';
 import { getCity, getCityOffers, getOffers } from '../../store/selectors';
+import { sortOffers } from '../../utils/sort-offers';
 
 function MainPage(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -15,6 +17,8 @@ function MainPage(): JSX.Element {
   const offers = useAppSelector(getOffers);
   const cityOffers = useAppSelector(getCityOffers);
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
+  const [sortType, setSortType] = useState(SortType.Popular);
+  const sortedOffers = useMemo(() => sortOffers(cityOffers, sortType), [cityOffers, sortType]);
 
   const handleCityChange = (selectedCity: City) => {
     dispatch(changeCity(selectedCity));
@@ -79,33 +83,8 @@ function MainPage(): JSX.Element {
             <section className="cities__places places">
               <h2 className="visually-hidden">Places</h2>
               <b className="places__found">{cityOffers.length} places to stay in {city.name}</b>
-              <form className="places__sorting" action="#" method="get">
-                <span className="places__sorting-caption">Sort by</span>
-                <span className="places__sorting-type" tabIndex={0}>
-                  Popular
-                  <svg className="places__sorting-arrow" width="7" height="4">
-                    <use xlinkHref="#icon-arrow-select"></use>
-                  </svg>
-                </span>
-                <ul className="places__options places__options--custom places__options--opened">
-                  <li
-                    className="places__option places__option--active"
-                    tabIndex={0}
-                  >
-                    Popular
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: low to high
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Price: high to low
-                  </li>
-                  <li className="places__option" tabIndex={0}>
-                    Top rated first
-                  </li>
-                </ul>
-              </form>
-              <PlaceCardsList offers={cityOffers} onCardHover={setActiveCardId} />
+              <SortingOptions sortType={sortType} onSortChange={setSortType} />
+              <PlaceCardsList offers={sortedOffers} onCardHover={setActiveCardId} />
             </section>
             <div className="cities__right-section">
               <Map key={city.name} city={city} offers={cityOffers} activeOfferId={activeCardId} />

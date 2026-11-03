@@ -1,5 +1,5 @@
 import cn from 'classnames';
-import { City } from '../../const';
+import type { City } from '../../const';
 
 type CitiesListProps = {
   cities: City[];
