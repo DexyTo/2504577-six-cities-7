@@ -1,4 +1,4 @@
-import { City } from './const';
+import type { City } from './const';
 
 export const PARIS: City = {
   name: 'Paris',
