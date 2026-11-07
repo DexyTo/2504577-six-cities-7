@@ -1,6 +1,6 @@
-import { type Offer, SortType } from '../const';
+import { type OfferPreview, SortType } from '../const';
 
-export function sortOffers(offers: Offer[], sortType: SortType): Offer[] {
+export function sortOffers(offers: OfferPreview[], sortType: SortType): OfferPreview[] {
   switch (sortType) {
     case SortType.PriceLowToHigh:
       return [...offers].sort((a, b) => a.price - b.price);

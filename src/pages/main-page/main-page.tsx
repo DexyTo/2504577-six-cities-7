@@ -4,7 +4,7 @@ import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import Map from '../../components/map/map';
 import CitiesList from '../../components/cities-list/cities-list';
 import SortingOptions from '../../components/sorting-options/sorting-options';
-import { AppRoute, City, SortType } from '../../const';
+import { AppRoute, type City, SortType } from '../../const';
 import { CITIES } from '../../cities';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { changeCity } from '../../store/action';
@@ -16,7 +16,7 @@ function MainPage(): JSX.Element {
   const city = useAppSelector(getCity);
   const offers = useAppSelector(getOffers);
   const cityOffers = useAppSelector(getCityOffers);
-  const [activeCardId, setActiveCardId] = useState<number | null>(null);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [sortType, setSortType] = useState(SortType.Popular);
   const sortedOffers = useMemo(() => sortOffers(cityOffers, sortType), [cityOffers, sortType]);
 
@@ -56,7 +56,7 @@ function MainPage(): JSX.Element {
                       Oliver.conner@gmail.com
                     </span>
                     <span className="header__favorite-count">
-                      {offers.filter((offer) => offer.inBookmarks).length}
+                      {offers.filter((offer) => offer.isFavorite).length}
                     </span>
                   </Link>
                 </li>

@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
-import { AppRoute, Offer } from '../../const';
+import { AppRoute, type OfferPreview } from '../../const';
 
 type FavoritesPageProps = {
-  offers: Offer[];
+  offers: OfferPreview[];
 };
 
 function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
-  const favoriteOffers = offers.filter((offer) => offer.inBookmarks);
+  const favoriteOffers = offers.filter((offer) => offer.isFavorite);
   const cities = [...new Set(favoriteOffers.map((offer) => offer.city.name))];
 
   return (
