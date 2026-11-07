@@ -53,18 +53,14 @@ function SortingOptions({
         }
       }}
     >
-      <span className="places__sorting-caption">Sort by</span>{' '}
+      <span className="places__sorting-caption">Sort by </span>
       <button
         className="places__sorting-type button"
         type="button"
         onClick={() => setIsOpened((prev) => !prev)}
       >
         {sortType}
-        <svg
-          className="places__sorting-arrow"
-          width="7"
-          height="4"
-        >
+        <svg className="places__sorting-arrow" width="7" height="4">
           <use xlinkHref="#icon-arrow-select" />
         </svg>
       </button>

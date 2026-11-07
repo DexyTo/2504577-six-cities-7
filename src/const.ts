@@ -17,19 +17,15 @@ export enum SortType {
   TopRatedFirst = 'Top rated first',
 }
 
-export type Host = {
+export type UserInfo = {
   name: string;
   avatarUrl: string;
   isPro: boolean;
 };
 
 export type ReviewData = {
-  id: number;
-  offerId: number;
-  user: {
-    name: string;
-    avatarUrl: string;
-  };
+  id: string;
+  user: UserInfo;
   rating: number;
   comment: string;
   date: string;
@@ -46,24 +42,29 @@ export type City = {
   location: Location;
 };
 
-export type Offer = {
-  id: number;
+type OfferMinimum = {
+  id: string;
   city: City;
   location: Location;
-  premium: boolean;
-  name: string;
-  img: string;
-  images: string[];
+  isPremium: boolean;
+  title: string;
   price: number;
-  priceText: string;
-  inBookmarks: boolean;
-  typeHousing: string;
+  isFavorite: boolean;
+  type: string;
   rating: number;
+};
+
+export type OfferPreview = OfferMinimum & {
+  previewImage: string;
+};
+
+export type Offer = OfferMinimum & {
+  images: string[];
   bedrooms: number;
   maxAdults: number;
   goods: string[];
-  host: Host;
-  description: string[];
+  host: UserInfo;
+  description: string;
 };
 
-export const getOfferRoute = (id: number) => `/offer/${id}`;
+export const getOfferRoute = (id: string) => `/offer/${id}`;

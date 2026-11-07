@@ -1,31 +1,31 @@
-import { useState } from 'react';
+import cn from 'classnames';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import ReviewsList from '../../components/reviews-list/reviews-list';
 import Map from '../../components/map/map';
 import NotFoundPage from '../not-found-page/not-found-page';
-import { AppRoute, Offer, ReviewData } from '../../const';
+import { AppRoute } from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
+import Spinner from '../../components/spinner/spinner';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import {
+  fetchOfferDetails,
+  type OfferDetails,
+  type OfferDetailsError,
+} from '../../store/api-action';
+import { getOffers } from '../../store/selectors';
 
-type OfferPageProps = {
-  offers: Offer[];
-  reviews: ReviewData[];
-};
+type OfferDetailsResult = { data: OfferDetails } | { error: OfferDetailsError };
 
-function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
-  const { id } = useParams();
-  const [activeCardId, setActiveCardId] = useState<number | null>(null);
-  const offer = offers.find((item) => item.id === Number(id));
-
-  if (!offer) {
-    return <NotFoundPage />;
-  }
-
-  const nearbyOffers = offers
-    .filter((nearbyOffer) => nearbyOffer.id !== offer.id && nearbyOffer.city.name === offer.city.name)
-    .slice(0, 3);
-  const favoriteCount = offers.filter((item) => item.inBookmarks).length;
-  const offerReviews = reviews.filter((review) => review.offerId === offer.id);
+function OfferPageContent({
+  offer,
+  nearbyOffers,
+  reviews,
+}: OfferDetails): JSX.Element {
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const offers = useAppSelector(getOffers);
+  const favoriteCount = offers.filter((item) => item.isFavorite).length;
 
   return (
     <div className="page">
@@ -74,70 +74,33 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/room.jpg"
-                  alt="Photo studio"
-                />
-              </div>
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/apartment-01.jpg"
-                  alt="Photo studio"
-                />
-              </div>
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/apartment-02.jpg"
-                  alt="Photo studio"
-                />
-              </div>
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/apartment-03.jpg"
-                  alt="Photo studio"
-                />
-              </div>
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/studio-01.jpg"
-                  alt="Photo studio"
-                />
-              </div>
-              <div className="offer__image-wrapper">
-                <img
-                  className="offer__image"
-                  src="img/apartment-01.jpg"
-                  alt="Photo studio"
-                />
-              </div>
+              {offer.images.map((image) => (
+                <div className="offer__image-wrapper" key={image}>
+                  <img className="offer__image" src={image} alt={offer.title} />
+                </div>
+              ))}
             </div>
           </div>
           <div className="offer__container container">
             <div className="offer__wrapper">
-              {offer.premium && (
+              {offer.isPremium && (
                 <div className="offer__mark">
                   <span>Premium</span>
                 </div>
               )}
               <div className="offer__name-wrapper">
-                <h1 className="offer__name">{offer.name}</h1>
+                <h1 className="offer__name">{offer.title}</h1>
                 <button
-                  className={`offer__bookmark-button button${
-                    offer.inBookmarks ? ' offer__bookmark-button--active' : ''
-                  }`}
+                  className={cn('offer__bookmark-button button', {
+                    'offer__bookmark-button--active': offer.isFavorite,
+                  })}
                   type="button"
                 >
                   <svg className="offer__bookmark-icon" width="31" height="33">
                     <use xlinkHref="#icon-bookmark" />
                   </svg>
                   <span className="visually-hidden">
-                    {offer.inBookmarks ? 'In bookmarks' : 'To bookmarks'}
+                    {offer.isFavorite ? 'In bookmarks' : 'To bookmarks'}
                   </span>
                 </button>
               </div>
@@ -152,10 +115,10 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
               </div>
               <ul className="offer__features">
                 <li className="offer__feature offer__feature--entire">
-                  {offer.typeHousing}
+                  {offer.type}
                 </li>
                 <li className="offer__feature offer__feature--bedrooms">
-                  {offer.bedrooms}{' '}
+                  {offer.bedrooms}&nbsp;
                   {offer.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
                 </li>
                 <li className="offer__feature offer__feature--adults">
@@ -180,9 +143,12 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
                 <h2 className="offer__host-title">Meet the host</h2>
                 <div className="offer__host-user user">
                   <div
-                    className={`offer__avatar-wrapper user__avatar-wrapper${
-                      offer.host.isPro ? ' offer__avatar-wrapper--pro' : ''
-                    }`}
+                    className={cn(
+                      'offer__avatar-wrapper user__avatar-wrapper',
+                      {
+                        'offer__avatar-wrapper--pro': offer.host.isPro,
+                      },
+                    )}
                   >
                     <img
                       className="offer__avatar user__avatar"
@@ -198,15 +164,11 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
                   )}
                 </div>
                 <div className="offer__description">
-                  {offer.description.map((paragraph) => (
-                    <p key={paragraph} className="offer__text">
-                      {paragraph}
-                    </p>
-                  ))}
+                  <p className="offer__text">{offer.description}</p>
                 </div>
               </div>
               <section className="offer__reviews reviews">
-                <ReviewsList reviews={offerReviews} />
+                <ReviewsList reviews={reviews} />
                 <CommentForm />
               </section>
             </div>
@@ -233,6 +195,49 @@ function OfferPage({ offers, reviews }: OfferPageProps): JSX.Element {
       </main>
     </div>
   );
+}
+
+function OfferPageLoader({ id }: { id: string }): JSX.Element {
+  const dispatch = useAppDispatch();
+  const [result, setResult] = useState<OfferDetailsResult | null>(null);
+
+  useEffect(() => {
+    const request = dispatch(fetchOfferDetails(id));
+
+    void request.then((action) => {
+      if (fetchOfferDetails.fulfilled.match(action)) {
+        setResult({ data: action.payload });
+      } else if (!action.meta.aborted) {
+        setResult({ error: action.payload ?? 'unavailable' });
+      }
+    });
+
+    return () => request.abort();
+  }, [dispatch, id]);
+
+  if (result === null) {
+    return <Spinner />;
+  }
+
+  if ('data' in result) {
+    return <OfferPageContent {...result.data} />;
+  }
+
+  if (result.error === 'not-found') {
+    return <NotFoundPage />;
+  }
+
+  return (
+    <p className="container" role="alert">
+      Could not load this place. Please refresh the page to try again.
+    </p>
+  );
+}
+
+function OfferPage(): JSX.Element {
+  const { id } = useParams();
+
+  return id ? <OfferPageLoader id={id} /> : <NotFoundPage />;
 }
 
 export default OfferPage;

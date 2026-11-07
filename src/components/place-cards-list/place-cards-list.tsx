@@ -1,10 +1,10 @@
-import type { Offer } from '../../const';
+import type { OfferPreview } from '../../const';
 import PlaceCard, { type PlaceCardType } from '../place-card/place-card';
 
 type PlaceCardsListProps = {
-  offers: Offer[];
+  offers: OfferPreview[];
   typeCard?: PlaceCardType;
-  onCardHover?: (offerId: number | null) => void;
+  onCardHover?: (offerId: string | null) => void;
 };
 
 function PlaceCardsList({
