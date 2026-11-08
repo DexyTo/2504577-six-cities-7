@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import App from './app';
 import { store } from './store';
-import { fetchOffers } from './store/api-action';
+import { checkAuth, fetchOffers } from './store/api-action';
 
+store.dispatch(checkAuth());
 store.dispatch(fetchOffers());
 
 const root = ReactDOM.createRoot(

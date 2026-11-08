@@ -1,21 +1,37 @@
 import cn from 'classnames';
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useMatch } from 'react-router-dom';
 import { AppRoute, AuthorizationStatus } from '../../const';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { logout } from '../../store/api-action';
+import {
+  getAuthorizationStatus,
+  getAuthUser,
+  getFavoriteCount,
+  getIsAuthRequestPending,
+} from '../../store/selectors';
 
-type HeaderProps = {
-  authorizationStatus: AuthorizationStatus;
-  favoriteCount?: number;
-};
+function Header(): JSX.Element {
+  const isMainPage = useMatch(AppRoute.Main) !== null;
+  const isLoginPage = useMatch(AppRoute.Login) !== null;
+  const dispatch = useAppDispatch();
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
+  const user = useAppSelector(getAuthUser);
+  const favoriteCount = useAppSelector(getFavoriteCount);
+  const isSigningOut = useAppSelector(getIsAuthRequestPending);
+  const [signOutError, setSignOutError] = useState(false);
 
-function Header({
-  authorizationStatus,
-  favoriteCount = 0,
-}: HeaderProps): JSX.Element {
-  const { pathname } = useLocation();
+  const showNavigation =
+    !isLoginPage && authorizationStatus !== AuthorizationStatus.Unknown;
 
-  const isMainPage = pathname === String(AppRoute.Main);
-  const isLoginPage = pathname === String(AppRoute.Login);
-  const isAuthorized = authorizationStatus === AuthorizationStatus.Auth;
+  const handleSignOut = async () => {
+    setSignOutError(false);
+    const action = await dispatch(logout());
+
+    if (logout.rejected.match(action) && !action.meta.condition) {
+      setSignOutError(true);
+    }
+  };
 
   return (
     <header className="header">
@@ -38,18 +54,26 @@ function Header({
             </Link>
           </div>
 
-          {!isLoginPage && (
+          {showNavigation ? (
             <nav className="header__nav">
               <ul className="header__nav-list">
                 <li className="header__nav-item user">
-                  {isAuthorized ? (
+                  {user ? (
                     <Link
                       className="header__nav-link header__nav-link--profile"
                       to={AppRoute.Favorites}
                     >
-                      <div className="header__avatar-wrapper user__avatar-wrapper" />
+                      <div className="header__avatar-wrapper user__avatar-wrapper">
+                        <img
+                          className="user__avatar"
+                          src={user.avatarUrl}
+                          width="20"
+                          height="20"
+                          alt=""
+                        />
+                      </div>
                       <span className="header__user-name user__name">
-                        Oliver.conner@gmail.com
+                        {user.email}
                       </span>
                       <span className="header__favorite-count">
                         {favoriteCount}
@@ -66,17 +90,25 @@ function Header({
                   )}
                 </li>
 
-                {isAuthorized && (
+                {user ? (
                   <li className="header__nav-item">
-                    <Link className="header__nav-link" to={AppRoute.Login}>
+                    <button
+                      className="header__nav-link button"
+                      type="button"
+                      disabled={isSigningOut}
+                      onClick={() => void handleSignOut()}
+                    >
                       <span className="header__signout">Sign out</span>
-                    </Link>
+                    </button>
                   </li>
-                )}
+                ) : null}
               </ul>
             </nav>
-          )}
+          ) : null}
         </div>
+        {signOutError && user ? (
+          <p role="alert">Could not sign out. Please try again.</p>
+        ) : null}
       </div>
     </header>
   );
