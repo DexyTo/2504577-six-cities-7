@@ -6,9 +6,10 @@ const api = createApi();
 
 export const store = configureStore({
   reducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-    thunk: { extraArgument: api },
-  }),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      thunk: { extraArgument: api },
+    }),
 });
 
 export type State = ReturnType<typeof store.getState>;

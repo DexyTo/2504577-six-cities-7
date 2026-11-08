@@ -6,6 +6,7 @@ export enum AppRoute {
 }
 
 export enum AuthorizationStatus {
+  Unknown = 'UNKNOWN',
   Auth = 'AUTH',
   NoAuth = 'NO_AUTH',
 }
@@ -21,6 +22,15 @@ export type UserInfo = {
   name: string;
   avatarUrl: string;
   isPro: boolean;
+};
+
+export type AuthUser = UserInfo & { email: string };
+
+export type AuthInfo = AuthUser & { token: string };
+
+export type LoginData = {
+  email: string;
+  password: string;
 };
 
 export type ReviewData = {
