@@ -1,12 +1,11 @@
 import cn from 'classnames';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import ReviewsList from '../../components/reviews-list/reviews-list';
 import Map from '../../components/map/map';
-import NotFoundPage from '../not-found-page/not-found-page';
-import { AuthorizationStatus } from '../../const';
+import { AppRoute, AuthorizationStatus, type ReviewData } from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
 import Spinner from '../../components/spinner/spinner';
 import { useAppDispatch, useAppSelector } from '../../hooks';
@@ -22,9 +21,15 @@ type OfferDetailsResult = { data: OfferDetails } | { error: OfferDetailsError };
 function OfferPageContent({
   offer,
   nearbyOffers,
-  reviews,
+  reviews: initialReviews,
 }: OfferDetails): JSX.Element {
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [reviews, setReviews] = useState(initialReviews);
+
+  const handleCommentPosted = (review: ReviewData) => {
+    setReviews((currentReviews) => [review, ...currentReviews]);
+  };
 
   return (
     <div className="page">
@@ -129,7 +134,12 @@ function OfferPageContent({
               </div>
               <section className="offer__reviews reviews">
                 <ReviewsList reviews={reviews} />
-                <CommentForm />
+                {authorizationStatus === AuthorizationStatus.Auth ? (
+                  <CommentForm
+                    offerId={offer.id}
+                    onCommentPosted={handleCommentPosted}
+                  />
+                ) : null}
               </section>
             </div>
           </div>
@@ -184,7 +194,7 @@ function OfferPageLoader({ id }: { id: string }): JSX.Element {
   }
 
   if (result.error === 'not-found') {
-    return <NotFoundPage />;
+    return <Navigate to={AppRoute.NotFound} replace />;
   }
 
   return (
@@ -199,7 +209,7 @@ function OfferPage(): JSX.Element {
   const authorizationStatus = useAppSelector(getAuthorizationStatus);
 
   if (!id) {
-    return <NotFoundPage />;
+    return <Navigate to={AppRoute.NotFound} replace />;
   }
 
   if (authorizationStatus === AuthorizationStatus.Unknown) {

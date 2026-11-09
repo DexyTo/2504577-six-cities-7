@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import MainPage from './pages/main-page/main-page';
 import LoginPage from './pages/login-page/login-page';
@@ -6,9 +7,11 @@ import OfferPage from './pages/offer-page/offer-page';
 import NotFoundPage from './pages/not-found-page/not-found-page';
 import PrivateRoute from './components/private-route/private-route';
 import Spinner from './components/spinner/spinner';
-import { AppRoute } from './const';
-import { useAppSelector } from './hooks';
+import { AppRoute, AuthorizationStatus } from './const';
+import { useAppDispatch, useAppSelector } from './hooks';
+import { fetchOffers } from './store/api-action';
 import {
+  getAuthorizationStatus,
   getHasAuthCheckError,
   getOffers,
   getOffersStatus,
@@ -24,9 +27,25 @@ const offersOutlets = {
   ),
 };
 
+function OffersLoader(): JSX.Element {
+  const dispatch = useAppDispatch();
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
+  const offersStatus = useAppSelector(getOffersStatus);
+
+  useEffect(() => {
+    if (authorizationStatus === AuthorizationStatus.Unknown) {
+      return;
+    }
+
+    const request = dispatch(fetchOffers());
+    return () => request.abort();
+  }, [authorizationStatus, dispatch]);
+
+  return offersOutlets[offersStatus];
+}
+
 export default function App(): JSX.Element {
   const offers = useAppSelector(getOffers);
-  const offersStatus = useAppSelector(getOffersStatus);
   const hasAuthCheckError = useAppSelector(getHasAuthCheckError);
 
   return (
@@ -38,11 +57,15 @@ export default function App(): JSX.Element {
         </p>
       ) : null}
       <Routes>
-        <Route element={offersOutlets[offersStatus]}>
+        <Route element={<OffersLoader />}>
           <Route path={AppRoute.Main} element={<MainPage />} />
         </Route>
         <Route
-          element={<PrivateRoute>{offersOutlets[offersStatus]}</PrivateRoute>}
+          element={
+            <PrivateRoute>
+              <OffersLoader />
+            </PrivateRoute>
+          }
         >
           <Route
             path={AppRoute.Favorites}

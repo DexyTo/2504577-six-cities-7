@@ -5,6 +5,7 @@ import {
   AuthorizationStatus,
   type AuthInfo,
   type LoginData,
+  type NewComment,
   type Offer,
   type OfferPreview,
   type ReviewData,
@@ -14,7 +15,7 @@ import { setAuthorization } from './action';
 import type { State } from './index';
 
 type ApiThunkConfig = { extra: AxiosInstance };
-type AuthThunkConfig = ApiThunkConfig & { state: State };
+type StateThunkConfig = ApiThunkConfig & { state: State };
 
 type LoginError = {
   message?: string;
@@ -32,11 +33,17 @@ export type OfferDetailsError = 'not-found' | 'unavailable';
 export const fetchOffers = createAsyncThunk<
   OfferPreview[],
   void,
-  ApiThunkConfig
->('offers/fetchOffers', async (_arg, { extra: api, signal }) => {
-  const { data } = await api.get<OfferPreview[]>('/offers', { signal });
-  return data;
-});
+  StateThunkConfig
+>(
+  'offers/fetchOffers',
+  async (_arg, { extra: api, signal }) => {
+    const { data } = await api.get<OfferPreview[]>('/offers', { signal });
+    return data;
+  },
+  {
+    condition: (_arg, { getState }) => getState().offersStatus !== 'succeeded',
+  },
+);
 
 export const checkAuth = createAsyncThunk<void, void, ApiThunkConfig>(
   'user/checkAuth',
@@ -64,7 +71,7 @@ export const checkAuth = createAsyncThunk<void, void, ApiThunkConfig>(
 export const login = createAsyncThunk<
   void,
   LoginData,
-  AuthThunkConfig & { rejectValue: string }
+  StateThunkConfig & { rejectValue: string }
 >(
   'user/login',
   async (credentials, { extra: api, dispatch, rejectWithValue }) => {
@@ -74,7 +81,6 @@ export const login = createAsyncThunk<
       } = await api.post<AuthInfo>('/login', credentials);
       saveToken(token);
       dispatch(setAuthorization(user));
-      dispatch(fetchOffers());
     } catch (error) {
       if (
         isAxiosError<LoginError>(error) &&
@@ -104,7 +110,7 @@ export const login = createAsyncThunk<
   },
 );
 
-export const logout = createAsyncThunk<void, void, AuthThunkConfig>(
+export const logout = createAsyncThunk<void, void, StateThunkConfig>(
   'user/logout',
   async (_arg, { extra: api, dispatch }) => {
     try {
@@ -120,7 +126,6 @@ export const logout = createAsyncThunk<void, void, AuthThunkConfig>(
 
     dropToken();
     dispatch(setAuthorization(null));
-    dispatch(fetchOffers());
   },
   {
     condition: (_arg, { getState }) => {
@@ -142,21 +147,46 @@ export const fetchOfferDetails = createAsyncThunk<
   async (id, { extra: api, signal, rejectWithValue }) => {
     const offerId = encodeURIComponent(id);
 
-    try {
-      const [offer, nearbyOffers, reviews] = await Promise.all([
-        api.get<Offer>(`/offers/${offerId}`, { signal }),
-        api.get<OfferPreview[]>(`/offers/${offerId}/nearby`, { signal }),
-        api.get<ReviewData[]>(`/comments/${offerId}`, { signal }),
-      ]);
+    const [offer, nearbyOffers, reviews] = await Promise.allSettled([
+      api.get<Offer>(`/offers/${offerId}`, { signal }),
+      api.get<OfferPreview[]>(`/offers/${offerId}/nearby`, { signal }),
+      api.get<ReviewData[]>(`/comments/${offerId}`, { signal }),
+    ]);
 
-      return {
-        offer: offer.data,
-        nearbyOffers: nearbyOffers.data,
-        reviews: reviews.data,
-      };
-    } catch (error) {
-      const notFound = isAxiosError(error) && error.response?.status === 404;
+    if (offer.status === 'rejected') {
+      const notFound =
+        isAxiosError(offer.reason) &&
+        offer.reason.response?.status === StatusCodes.NOT_FOUND;
       return rejectWithValue(notFound ? 'not-found' : 'unavailable');
     }
+
+    if (nearbyOffers.status === 'rejected' || reviews.status === 'rejected') {
+      return rejectWithValue('unavailable');
+    }
+
+    return {
+      offer: offer.value.data,
+      nearbyOffers: nearbyOffers.value.data,
+      reviews: reviews.value.data,
+    };
+  },
+);
+
+export const postComment = createAsyncThunk<
+  ReviewData,
+  { offerId: string; comment: NewComment },
+  StateThunkConfig
+>(
+  'offers/postComment',
+  async ({ offerId, comment }, { extra: api }) => {
+    const { data } = await api.post<ReviewData>(
+      `/comments/${encodeURIComponent(offerId)}`,
+      comment,
+    );
+    return data;
+  },
+  {
+    condition: (_arg, { getState }) =>
+      getState().authorizationStatus === AuthorizationStatus.Auth,
   },
 );

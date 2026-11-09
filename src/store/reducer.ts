@@ -37,6 +37,9 @@ export const reducer = createReducer(initialState, (builder) => {
       state.city = action.payload;
     })
     .addCase(setAuthorization, (state, action) => {
+      state.offers = [];
+      state.offersStatus = 'loading';
+      state.offersRequestId = null;
       state.user = action.payload;
       state.authorizationStatus = action.payload
         ? AuthorizationStatus.Auth
