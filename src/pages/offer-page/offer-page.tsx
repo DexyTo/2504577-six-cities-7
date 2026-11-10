@@ -1,11 +1,17 @@
 import cn from 'classnames';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import ReviewsList from '../../components/reviews-list/reviews-list';
 import Map from '../../components/map/map';
-import { AppRoute, AuthorizationStatus, type ReviewData } from '../../const';
+import {
+  AppRoute,
+  AuthorizationStatus,
+  type City,
+  type OfferPreview,
+  type ReviewData,
+} from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
 import Spinner from '../../components/spinner/spinner';
 import { useAppDispatch, useAppSelector } from '../../hooks';
@@ -18,13 +24,16 @@ import { getAuthorizationStatus } from '../../store/selectors';
 
 type OfferDetailsResult = { data: OfferDetails } | { error: OfferDetailsError };
 
-function OfferPageContent({
-  offer,
-  nearbyOffers,
-  reviews: initialReviews,
-}: OfferDetails): JSX.Element {
+type OfferReviewsProps = {
+  offerId: string;
+  initialReviews: ReviewData[];
+};
+
+function OfferReviews({
+  offerId,
+  initialReviews,
+}: OfferReviewsProps): JSX.Element {
   const authorizationStatus = useAppSelector(getAuthorizationStatus);
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [reviews, setReviews] = useState(initialReviews);
 
   const handleCommentPosted = (review: ReviewData) => {
@@ -32,11 +41,66 @@ function OfferPageContent({
   };
 
   return (
+    <section className="offer__reviews reviews">
+      <ReviewsList reviews={reviews} />
+      {authorizationStatus === AuthorizationStatus.Auth ? (
+        <CommentForm offerId={offerId} onCommentPosted={handleCommentPosted} />
+      ) : null}
+    </section>
+  );
+}
+
+type OfferPlacesProps = {
+  city: City;
+  offers: OfferPreview[];
+  children: ReactNode;
+};
+
+function OfferPlaces({
+  city,
+  offers,
+  children,
+}: OfferPlacesProps): JSX.Element {
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+
+  return (
+    <>
+      <section className="offer">
+        {children}
+        <Map
+          city={city}
+          offers={offers}
+          activeOfferId={activeCardId}
+          className="offer__map"
+        />
+      </section>
+      <div className="container">
+        <section className="near-places places">
+          <h2 className="near-places__title">
+            Other places in the neighbourhood
+          </h2>
+          <PlaceCardsList
+            offers={offers}
+            typeCard="near-places"
+            onCardHover={setActiveCardId}
+          />
+        </section>
+      </div>
+    </>
+  );
+}
+
+function OfferPageContent({
+  offer,
+  nearbyOffers,
+  reviews,
+}: OfferDetails): JSX.Element {
+  return (
     <div className="page">
       <Header />
 
       <main className="page__main page__main--offer">
-        <section className="offer">
+        <OfferPlaces city={offer.city} offers={nearbyOffers}>
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
               {offer.images.map((image) => (
@@ -132,36 +196,10 @@ function OfferPageContent({
                   <p className="offer__text">{offer.description}</p>
                 </div>
               </div>
-              <section className="offer__reviews reviews">
-                <ReviewsList reviews={reviews} />
-                {authorizationStatus === AuthorizationStatus.Auth ? (
-                  <CommentForm
-                    offerId={offer.id}
-                    onCommentPosted={handleCommentPosted}
-                  />
-                ) : null}
-              </section>
+              <OfferReviews offerId={offer.id} initialReviews={reviews} />
             </div>
           </div>
-          <Map
-            city={offer.city}
-            offers={nearbyOffers}
-            activeOfferId={activeCardId}
-            className="offer__map"
-          />
-        </section>
-        <div className="container">
-          <section className="near-places places">
-            <h2 className="near-places__title">
-              Other places in the neighbourhood
-            </h2>
-            <PlaceCardsList
-              offers={nearbyOffers}
-              typeCard="near-places"
-              onCardHover={setActiveCardId}
-            />
-          </section>
-        </div>
+        </OfferPlaces>
       </main>
     </div>
   );
@@ -216,7 +254,7 @@ function OfferPage(): JSX.Element {
     return <Spinner />;
   }
 
-  return <OfferPageLoader id={id} />;
+  return <OfferPageLoader key={id} id={id} />;
 }
 
 export default OfferPage;

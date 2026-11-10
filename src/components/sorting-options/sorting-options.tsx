@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import { SortType } from '../../const';
 
@@ -86,4 +86,5 @@ function SortingOptions({
   );
 }
 
-export default SortingOptions;
+const MemoizedSortingOptions = memo(SortingOptions);
+export default MemoizedSortingOptions;

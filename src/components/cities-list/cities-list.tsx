@@ -1,4 +1,5 @@
 import cn from 'classnames';
+import { memo } from 'react';
 import type { City } from '../../const';
 
 type CitiesListProps = {
@@ -7,7 +8,11 @@ type CitiesListProps = {
   onCityChange: (city: City) => void;
 };
 
-function CitiesList({ cities, selectedCity, onCityChange }: CitiesListProps): JSX.Element {
+function CitiesList({
+  cities,
+  selectedCity,
+  onCityChange,
+}: CitiesListProps): JSX.Element {
   return (
     <ul className="locations__list tabs__list">
       {cities.map((city) => (
@@ -30,4 +35,5 @@ function CitiesList({ cities, selectedCity, onCityChange }: CitiesListProps): JS
   );
 }
 
-export default CitiesList;
+const MemoizedCitiesList = memo(CitiesList);
+export default MemoizedCitiesList;

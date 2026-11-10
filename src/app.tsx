@@ -13,7 +13,6 @@ import { fetchOffers } from './store/api-action';
 import {
   getAuthorizationStatus,
   getHasAuthCheckError,
-  getOffers,
   getOffersStatus,
 } from './store/selectors';
 
@@ -45,7 +44,6 @@ function OffersLoader(): JSX.Element {
 }
 
 export default function App(): JSX.Element {
-  const offers = useAppSelector(getOffers);
   const hasAuthCheckError = useAppSelector(getHasAuthCheckError);
 
   return (
@@ -67,10 +65,7 @@ export default function App(): JSX.Element {
             </PrivateRoute>
           }
         >
-          <Route
-            path={AppRoute.Favorites}
-            element={<FavoritesPage offers={offers} />}
-          />
+          <Route path={AppRoute.Favorites} element={<FavoritesPage />} />
         </Route>
         <Route path={AppRoute.Login} element={<LoginPage />} />
         <Route path={AppRoute.Offer} element={<OfferPage />} />

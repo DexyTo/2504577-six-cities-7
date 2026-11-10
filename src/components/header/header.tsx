@@ -1,5 +1,5 @@
 import cn from 'classnames';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Link, useMatch } from 'react-router-dom';
 import { AppRoute, AuthorizationStatus } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../hooks';
@@ -114,4 +114,5 @@ function Header(): JSX.Element {
   );
 }
 
-export default Header;
+const MemoizedHeader = memo(Header);
+export default MemoizedHeader;
