@@ -1,19 +1,43 @@
 import { createSelector } from '@reduxjs/toolkit';
+import type { OfferPreview } from '../const';
 import type { State } from './index';
 
 export const getCity = (state: State) => state.city;
-export const getOffers = (state: State) => state.offers;
-export const getOffersStatus = (state: State) => state.offersStatus;
+export const getOffers = (state: State) => state.offers.items;
+export const getOffersStatus = (state: State) => state.offers.status;
 export const getAuthorizationStatus = (state: State) =>
-  state.authorizationStatus;
-export const getAuthUser = (state: State) => state.user;
-export const getHasAuthCheckError = (state: State) => state.hasAuthCheckError;
+  state.user.authorizationStatus;
+export const getAuthUser = (state: State) => state.user.profile;
+export const getHasAuthCheckError = (state: State) =>
+  state.user.hasAuthCheckError;
 export const getIsAuthRequestPending = (state: State) =>
-  state.isAuthRequestPending;
+  state.user.isAuthRequestPending;
 
-export const getFavoriteCount = createSelector(
-  [getOffers],
-  (offers) => offers.filter((offer) => offer.isFavorite).length,
+const getFavoriteOffers = createSelector([getOffers], (offers) =>
+  offers.filter((offer) => offer.isFavorite),
+);
+
+export const getFavoriteCount = (state: State) =>
+  getFavoriteOffers(state).length;
+
+export const getFavoriteOffersByCity = createSelector(
+  [getFavoriteOffers],
+  (offers) => {
+    const offersByCity = new Map<string, OfferPreview[]>();
+
+    for (const offer of offers) {
+      const cityName = offer.city.name;
+      const cityOffers = offersByCity.get(cityName);
+
+      if (cityOffers) {
+        cityOffers.push(offer);
+      } else {
+        offersByCity.set(cityName, [offer]);
+      }
+    }
+
+    return Array.from(offersByCity);
+  },
 );
 
 export const getCityOffers = createSelector(

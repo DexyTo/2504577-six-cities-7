@@ -1,4 +1,5 @@
 import cn from 'classnames';
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { getOfferRoute, type OfferPreview } from '../../const';
 
@@ -82,4 +83,5 @@ function PlaceCard({
   );
 }
 
-export default PlaceCard;
+const MemoizedPlaceCard = memo(PlaceCard);
+export default MemoizedPlaceCard;

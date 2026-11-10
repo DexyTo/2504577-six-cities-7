@@ -41,7 +41,7 @@ export const fetchOffers = createAsyncThunk<
     return data;
   },
   {
-    condition: (_arg, { getState }) => getState().offersStatus !== 'succeeded',
+    condition: (_arg, { getState }) => getState().offers.status !== 'succeeded',
   },
 );
 
@@ -101,7 +101,7 @@ export const login = createAsyncThunk<
   },
   {
     condition: (_arg, { getState }) => {
-      const { authorizationStatus, isAuthRequestPending } = getState();
+      const { authorizationStatus, isAuthRequestPending } = getState().user;
       return (
         authorizationStatus === AuthorizationStatus.NoAuth &&
         !isAuthRequestPending
@@ -129,7 +129,7 @@ export const logout = createAsyncThunk<void, void, StateThunkConfig>(
   },
   {
     condition: (_arg, { getState }) => {
-      const { authorizationStatus, isAuthRequestPending } = getState();
+      const { authorizationStatus, isAuthRequestPending } = getState().user;
       return (
         authorizationStatus === AuthorizationStatus.Auth &&
         !isAuthRequestPending
@@ -187,6 +187,6 @@ export const postComment = createAsyncThunk<
   },
   {
     condition: (_arg, { getState }) =>
-      getState().authorizationStatus === AuthorizationStatus.Auth,
+      getState().user.authorizationStatus === AuthorizationStatus.Auth,
   },
 );

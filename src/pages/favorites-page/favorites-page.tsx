@@ -1,15 +1,12 @@
 import { Link } from 'react-router-dom';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
-import { AppRoute, type OfferPreview } from '../../const';
+import { AppRoute } from '../../const';
+import { useAppSelector } from '../../hooks';
+import { getFavoriteOffersByCity } from '../../store/selectors';
 
-type FavoritesPageProps = {
-  offers: OfferPreview[];
-};
-
-function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
-  const favoriteOffers = offers.filter((offer) => offer.isFavorite);
-  const cities = [...new Set(favoriteOffers.map((offer) => offer.city.name))];
+function FavoritesPage(): JSX.Element {
+  const favoriteOffersByCity = useAppSelector(getFavoriteOffersByCity);
 
   return (
     <div className="page">
@@ -20,7 +17,7 @@ function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
           <section className="favorites">
             <h1 className="favorites__title">Saved listing</h1>
             <ul className="favorites__list">
-              {cities.map((city) => (
+              {favoriteOffersByCity.map(([city, offers]) => (
                 <li key={city} className="favorites__locations-items">
                   <div className="favorites__locations locations locations--current">
                     <div className="locations__item">
@@ -29,12 +26,7 @@ function FavoritesPage({ offers }: FavoritesPageProps): JSX.Element {
                       </a>
                     </div>
                   </div>
-                  <PlaceCardsList
-                    offers={favoriteOffers.filter(
-                      (offer) => offer.city.name === city,
-                    )}
-                    typeCard="favorites"
-                  />
+                  <PlaceCardsList offers={offers} typeCard="favorites" />
                 </li>
               ))}
             </ul>

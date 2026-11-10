@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import Map from '../../components/map/map';
@@ -22,10 +22,13 @@ function MainPage(): JSX.Element {
     [cityOffers, sortType],
   );
 
-  const handleCityChange = (selectedCity: City) => {
-    dispatch(changeCity(selectedCity));
-    setActiveCardId(null);
-  };
+  const handleCityChange = useCallback(
+    (selectedCity: City) => {
+      dispatch(changeCity(selectedCity));
+      setActiveCardId(null);
+    },
+    [dispatch],
+  );
 
   return (
     <div className="page page--gray page--main">

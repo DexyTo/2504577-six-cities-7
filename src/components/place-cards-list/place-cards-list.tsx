@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { OfferPreview } from '../../const';
 import PlaceCard, { type PlaceCardType } from '../place-card/place-card';
 
@@ -32,4 +33,5 @@ function PlaceCardsList({
   );
 }
 
-export default PlaceCardsList;
+const MemoizedPlaceCardsList = memo(PlaceCardsList);
+export default MemoizedPlaceCardsList;

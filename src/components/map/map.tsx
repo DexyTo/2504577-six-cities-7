@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Marker, layerGroup } from 'leaflet';
 import type { City, OfferPreview } from '../../const';
 import useMap from '../../hooks/use-map';
@@ -12,13 +12,14 @@ type MapProps = {
   className?: string;
 };
 
-function Map({
+function OfferMap({
   city,
   offers,
   activeOfferId = null,
   className = 'cities__map',
 }: MapProps): JSX.Element {
   const mapRef = useRef<HTMLElement>(null);
+  const markersRef = useRef<Map<string, Marker> | null>(null);
   const map = useMap(mapRef, city);
 
   useEffect(() => {
@@ -26,16 +27,35 @@ function Map({
       return;
     }
 
-    const markers = layerGroup().addTo(map);
+    const layer = layerGroup().addTo(map);
+    const markers = new Map<string, Marker>();
 
     offers.forEach((offer) => {
-      new Marker([offer.location.latitude, offer.location.longitude], {
-        icon: offer.id === activeOfferId ? activeIcon : defaultIcon,
-      }).addTo(markers);
+      const marker = new Marker(
+        [offer.location.latitude, offer.location.longitude],
+        { icon: defaultIcon },
+      ).addTo(layer);
+
+      markers.set(offer.id, marker);
     });
+    markersRef.current = markers;
 
     return () => {
-      map.removeLayer(markers);
+      markersRef.current = null;
+      map.removeLayer(layer);
+    };
+  }, [map, offers]);
+
+  useEffect(() => {
+    if (activeOfferId === null) {
+      return;
+    }
+
+    const marker = markersRef.current?.get(activeOfferId);
+    marker?.setIcon(activeIcon);
+
+    return () => {
+      marker?.setIcon(defaultIcon);
     };
   }, [map, offers, activeOfferId]);
 
@@ -48,4 +68,5 @@ function Map({
   );
 }
 
-export default Map;
+const MemoizedOfferMap = memo(OfferMap);
+export default MemoizedOfferMap;
