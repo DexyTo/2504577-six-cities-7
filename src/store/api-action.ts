@@ -45,6 +45,84 @@ export const fetchOffers = createAsyncThunk<
   },
 );
 
+function isUnauthorized(error: unknown): boolean {
+  return (
+    isAxiosError(error) && error.response?.status === StatusCodes.UNAUTHORIZED
+  );
+}
+
+export const fetchFavorites = createAsyncThunk<
+  OfferPreview[],
+  void,
+  StateThunkConfig
+>(
+  'favorites/fetchFavorites',
+  async (_arg, { extra: api, dispatch, getState, requestId, signal }) => {
+    try {
+      const { data } = await api.get<OfferPreview[]>('/favorite', { signal });
+      return data;
+    } catch (error) {
+      if (
+        isUnauthorized(error) &&
+        getState().favorites.requestId === requestId
+      ) {
+        dropToken();
+        dispatch(setAuthorization(null));
+      }
+      throw error;
+    }
+  },
+  {
+    condition: (_arg, { getState }) => {
+      const { favorites, user } = getState();
+      return (
+        user.authorizationStatus === AuthorizationStatus.Auth &&
+        favorites.status === 'idle'
+      );
+    },
+  },
+);
+
+export const setFavoriteStatus = createAsyncThunk<
+  OfferPreview,
+  { offerId: string; isFavorite: boolean },
+  StateThunkConfig & { rejectValue: 'unauthorized' }
+>(
+  'favorites/setFavoriteStatus',
+  async (
+    { offerId, isFavorite },
+    { extra: api, dispatch, getState, requestId, rejectWithValue },
+  ) => {
+    try {
+      const status = isFavorite ? 1 : 0;
+      const { data } = await api.post<OfferPreview>(
+        `/favorite/${encodeURIComponent(offerId)}/${status}`,
+      );
+      return data;
+    } catch (error) {
+      if (
+        isUnauthorized(error) &&
+        getState().favorites.pendingUpdates[offerId] === requestId
+      ) {
+        dropToken();
+        dispatch(setAuthorization(null));
+        return rejectWithValue('unauthorized');
+      }
+      throw error;
+    }
+  },
+  {
+    condition: ({ offerId }, { getState }) => {
+      const { favorites, user } = getState();
+      return (
+        user.authorizationStatus === AuthorizationStatus.Auth &&
+        !user.isAuthRequestPending &&
+        favorites.pendingUpdates[offerId] === undefined
+      );
+    },
+  },
+);
+
 export const checkAuth = createAsyncThunk<void, void, ApiThunkConfig>(
   'user/checkAuth',
   async (_arg, { extra: api, dispatch }) => {
@@ -55,10 +133,7 @@ export const checkAuth = createAsyncThunk<void, void, ApiThunkConfig>(
       saveToken(token);
       dispatch(setAuthorization(user));
     } catch (error) {
-      if (
-        !isAxiosError(error) ||
-        error.response?.status !== StatusCodes.UNAUTHORIZED
-      ) {
+      if (!isUnauthorized(error)) {
         throw error;
       }
 
@@ -116,10 +191,7 @@ export const logout = createAsyncThunk<void, void, StateThunkConfig>(
     try {
       await api.delete('/logout');
     } catch (error) {
-      if (
-        !isAxiosError(error) ||
-        error.response?.status !== StatusCodes.UNAUTHORIZED
-      ) {
+      if (!isUnauthorized(error)) {
         throw error;
       }
     }

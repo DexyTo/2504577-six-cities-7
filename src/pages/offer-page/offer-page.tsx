@@ -1,6 +1,7 @@
 import cn from 'classnames';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import BookmarkButton from '../../components/bookmark-button/bookmark-button';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import ReviewsList from '../../components/reviews-list/reviews-list';
@@ -119,19 +120,11 @@ function OfferPageContent({
               )}
               <div className="offer__name-wrapper">
                 <h1 className="offer__name">{offer.title}</h1>
-                <button
-                  className={cn('offer__bookmark-button button', {
-                    'offer__bookmark-button--active': offer.isFavorite,
-                  })}
-                  type="button"
-                >
-                  <svg className="offer__bookmark-icon" width="31" height="33">
-                    <use xlinkHref="#icon-bookmark" />
-                  </svg>
-                  <span className="visually-hidden">
-                    {offer.isFavorite ? 'In bookmarks' : 'To bookmarks'}
-                  </span>
-                </button>
+                <BookmarkButton
+                  offerId={offer.id}
+                  initialStatus={offer.isFavorite}
+                  variant="offer"
+                />
               </div>
               <div className="offer__rating rating">
                 <div className="offer__stars rating__stars">

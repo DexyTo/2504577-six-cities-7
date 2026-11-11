@@ -1,7 +1,7 @@
-import cn from 'classnames';
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { getOfferRoute, type OfferPreview } from '../../const';
+import BookmarkButton from '../bookmark-button/bookmark-button';
 
 export type PlaceCardType = 'cities' | 'favorites' | 'near-places';
 
@@ -54,19 +54,11 @@ function PlaceCard({
             <b className="place-card__price-value">&euro;{offerData.price}</b>
             <span className="place-card__price-text">&#47;&nbsp;night</span>
           </div>
-          <button
-            className={cn('place-card__bookmark-button button', {
-              'place-card__bookmark-button--active': offerData.isFavorite,
-            })}
-            type="button"
-          >
-            <svg className="place-card__bookmark-icon" width="18" height="19">
-              <use xlinkHref="#icon-bookmark"></use>
-            </svg>
-            <span className="visually-hidden">
-              {offerData.isFavorite ? 'In bookmarks' : 'To bookmarks'}
-            </span>
-          </button>
+          <BookmarkButton
+            offerId={offerData.id}
+            initialStatus={offerData.isFavorite}
+            variant="place-card"
+          />
         </div>
         <div className="place-card__rating rating">
           <div className="place-card__stars rating__stars">
