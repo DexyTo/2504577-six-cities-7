@@ -8,6 +8,8 @@ import {
   getAuthorizationStatus,
   getAuthUser,
   getFavoriteCount,
+  getFavoritesStatus,
+  getHasFavoriteUpdateError,
   getIsAuthRequestPending,
 } from '../../store/selectors';
 
@@ -18,6 +20,8 @@ function Header(): JSX.Element {
   const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const user = useAppSelector(getAuthUser);
   const favoriteCount = useAppSelector(getFavoriteCount);
+  const favoritesStatus = useAppSelector(getFavoritesStatus);
+  const hasFavoriteUpdateError = useAppSelector(getHasFavoriteUpdateError);
   const isSigningOut = useAppSelector(getIsAuthRequestPending);
   const [signOutError, setSignOutError] = useState(false);
 
@@ -75,9 +79,11 @@ function Header(): JSX.Element {
                       <span className="header__user-name user__name">
                         {user.email}
                       </span>
-                      <span className="header__favorite-count">
-                        {favoriteCount}
-                      </span>
+                      {favoritesStatus === 'succeeded' ? (
+                        <span className="header__favorite-count">
+                          {favoriteCount}
+                        </span>
+                      ) : null}
                     </Link>
                   ) : (
                     <Link
@@ -108,6 +114,12 @@ function Header(): JSX.Element {
         </div>
         {signOutError && user ? (
           <p role="alert">Could not sign out. Please try again.</p>
+        ) : null}
+        {favoritesStatus === 'failed' ? (
+          <p role="alert">Could not load favorites.</p>
+        ) : null}
+        {hasFavoriteUpdateError ? (
+          <p role="alert">Could not update favorites.</p>
         ) : null}
       </div>
     </header>

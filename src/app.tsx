@@ -9,7 +9,7 @@ import PrivateRoute from './components/private-route/private-route';
 import Spinner from './components/spinner/spinner';
 import { AppRoute, AuthorizationStatus } from './const';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { fetchOffers } from './store/api-action';
+import { fetchFavorites, fetchOffers } from './store/api-action';
 import {
   getAuthorizationStatus,
   getHasAuthCheckError,
@@ -44,7 +44,15 @@ function OffersLoader(): JSX.Element {
 }
 
 export default function App(): JSX.Element {
+  const dispatch = useAppDispatch();
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const hasAuthCheckError = useAppSelector(getHasAuthCheckError);
+
+  useEffect(() => {
+    if (authorizationStatus === AuthorizationStatus.Auth) {
+      void dispatch(fetchFavorites());
+    }
+  }, [authorizationStatus, dispatch]);
 
   return (
     <BrowserRouter>
@@ -59,14 +67,13 @@ export default function App(): JSX.Element {
           <Route path={AppRoute.Main} element={<MainPage />} />
         </Route>
         <Route
+          path={AppRoute.Favorites}
           element={
             <PrivateRoute>
-              <OffersLoader />
+              <FavoritesPage />
             </PrivateRoute>
           }
-        >
-          <Route path={AppRoute.Favorites} element={<FavoritesPage />} />
-        </Route>
+        />
         <Route path={AppRoute.Login} element={<LoginPage />} />
         <Route path={AppRoute.Offer} element={<OfferPage />} />
         <Route path="*" element={<NotFoundPage />} />

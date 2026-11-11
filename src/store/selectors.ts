@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import type { OfferPreview } from '../const';
+import { AuthorizationStatus, type OfferPreview } from '../const';
 import type { State } from './index';
 
 export const getCity = (state: State) => state.city;
@@ -13,8 +13,31 @@ export const getHasAuthCheckError = (state: State) =>
 export const getIsAuthRequestPending = (state: State) =>
   state.user.isAuthRequestPending;
 
-const getFavoriteOffers = createSelector([getOffers], (offers) =>
-  offers.filter((offer) => offer.isFavorite),
+const getFavoriteItems = (state: State) => state.favorites.items;
+
+export const getFavoritesStatus = (state: State) => state.favorites.status;
+export const getHasFavoriteUpdateError = (state: State) =>
+  state.favorites.hasUpdateError;
+export const getIsFavoriteUpdatePending = (state: State, offerId: string) =>
+  state.favorites.pendingUpdates[offerId] !== undefined;
+
+export function getIsFavorite(
+  state: State,
+  offerId: string,
+  initialStatus: boolean,
+): boolean {
+  if (getAuthorizationStatus(state) !== AuthorizationStatus.Auth) {
+    return false;
+  }
+
+  const favorite = getFavoriteItems(state)[offerId];
+  return favorite === undefined
+    ? getFavoritesStatus(state) !== 'succeeded' && initialStatus
+    : favorite !== null;
+}
+
+const getFavoriteOffers = createSelector([getFavoriteItems], (items) =>
+  Object.values(items).filter((offer): offer is OfferPreview => Boolean(offer)),
 );
 
 export const getFavoriteCount = (state: State) =>
