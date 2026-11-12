@@ -111,7 +111,7 @@ function CommentForm({
         <p className="reviews__help">
           To submit review please make sure to set&nbsp;
           <span className="reviews__star">rating</span> and describe your stay
-          with at least{' '}
+          with at least&nbsp;
           <b className="reviews__text-amount">
             {MIN_COMMENT_LENGTH} characters
           </b>

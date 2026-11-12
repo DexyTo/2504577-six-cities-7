@@ -2,8 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import Header from '../../components/header/header';
 import Spinner from '../../components/spinner/spinner';
+import { CITIES } from '../../cities';
 import { AppRoute, AuthorizationStatus } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../hooks';
+import { usePageTitle } from '../../hooks/use-page-title';
+import { changeCity } from '../../store/action';
 import { login } from '../../store/api-action';
 import {
   getAuthorizationStatus,
@@ -11,10 +14,14 @@ import {
 } from '../../store/selectors';
 
 function LoginPage(): JSX.Element {
+  usePageTitle('6 cities: authorization');
   const dispatch = useAppDispatch();
   const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const isSigningIn = useAppSelector(getIsAuthRequestPending);
   const [error, setError] = useState<string | null>(null);
+  const [shortcutCity] = useState(
+    () => CITIES[Math.floor(Math.random() * CITIES.length)],
+  );
 
   if (authorizationStatus === AuthorizationStatus.Unknown) {
     return <Spinner />;
@@ -31,8 +38,8 @@ function LoginPage(): JSX.Element {
     const email = String(formData.get('email') ?? '').trim();
     const password = String(formData.get('password') ?? '');
 
-    if (!password.trim()) {
-      setError('Enter a password that contains a non-space character.');
+    if (!/\p{L}/u.test(password) || !/\p{Nd}/u.test(password)) {
+      setError('Enter a password with at least one letter and one digit.');
       return;
     }
 
@@ -96,8 +103,12 @@ function LoginPage(): JSX.Element {
           </section>
           <section className="locations locations--login locations--current">
             <div className="locations__item">
-              <Link className="locations__item-link" to={AppRoute.Main}>
-                <span>Amsterdam</span>
+              <Link
+                className="locations__item-link"
+                to={AppRoute.Main}
+                onClick={() => dispatch(changeCity(shortcutCity))}
+              >
+                <span>{shortcutCity.name}</span>
               </Link>
             </div>
           </section>

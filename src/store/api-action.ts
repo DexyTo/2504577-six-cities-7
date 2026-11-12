@@ -53,7 +53,7 @@ function isUnauthorized(error: unknown): boolean {
 
 export const fetchFavorites = createAsyncThunk<
   OfferPreview[],
-  void,
+  void | 'refresh',
   StateThunkConfig
 >(
   'favorites/fetchFavorites',
@@ -73,11 +73,12 @@ export const fetchFavorites = createAsyncThunk<
     }
   },
   {
-    condition: (_arg, { getState }) => {
+    condition: (mode, { getState }) => {
       const { favorites, user } = getState();
       return (
         user.authorizationStatus === AuthorizationStatus.Auth &&
-        favorites.status === 'idle'
+        favorites.status !== 'loading' &&
+        (mode === 'refresh' || favorites.status === 'idle')
       );
     },
   },

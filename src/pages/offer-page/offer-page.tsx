@@ -9,19 +9,25 @@ import Map from '../../components/map/map';
 import {
   AppRoute,
   AuthorizationStatus,
-  type City,
+  type Offer,
   type OfferPreview,
   type ReviewData,
 } from '../../const';
 import CommentForm from '../../components/comment-form/comment-form';
 import Spinner from '../../components/spinner/spinner';
 import { useAppDispatch, useAppSelector } from '../../hooks';
+import { usePageTitle } from '../../hooks/use-page-title';
 import {
   fetchOfferDetails,
   type OfferDetails,
   type OfferDetailsError,
 } from '../../store/api-action';
 import { getAuthorizationStatus } from '../../store/selectors';
+import { formatOfferType } from '../../utils/format-offer-type';
+import { getRatingWidth } from '../../utils/rating';
+
+const MAX_OFFER_IMAGES = 6;
+const MAX_NEARBY_OFFERS = 3;
 
 type OfferDetailsResult = { data: OfferDetails } | { error: OfferDetailsError };
 
@@ -52,26 +58,26 @@ function OfferReviews({
 }
 
 type OfferPlacesProps = {
-  city: City;
-  offers: OfferPreview[];
+  offer: Offer;
+  nearbyOffers: OfferPreview[];
   children: ReactNode;
 };
 
 function OfferPlaces({
-  city,
-  offers,
+  offer,
+  nearbyOffers,
   children,
 }: OfferPlacesProps): JSX.Element {
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const offers = nearbyOffers.slice(0, MAX_NEARBY_OFFERS);
 
   return (
     <>
       <section className="offer">
         {children}
         <Map
-          city={city}
-          offers={offers}
-          activeOfferId={activeCardId}
+          city={offer.city}
+          offers={[...offers, offer]}
+          activeOfferId={offer.id}
           className="offer__map"
         />
       </section>
@@ -83,7 +89,6 @@ function OfferPlaces({
           <PlaceCardsList
             offers={offers}
             typeCard="near-places"
-            onCardHover={setActiveCardId}
           />
         </section>
       </div>
@@ -96,15 +101,19 @@ function OfferPageContent({
   nearbyOffers,
   reviews,
 }: OfferDetails): JSX.Element {
+  const descriptionParagraphs = Array.from(
+    offer.description.trim().matchAll(/\S[\s\S]*?(?=\r?\n\s*\r?\n|$)/g),
+  );
+
   return (
     <div className="page">
       <Header />
 
       <main className="page__main page__main--offer">
-        <OfferPlaces city={offer.city} offers={nearbyOffers}>
+        <OfferPlaces offer={offer} nearbyOffers={nearbyOffers}>
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {offer.images.map((image) => (
+              {offer.images.slice(0, MAX_OFFER_IMAGES).map((image) => (
                 <div className="offer__image-wrapper" key={image}>
                   <img className="offer__image" src={image} alt={offer.title} />
                 </div>
@@ -128,7 +137,7 @@ function OfferPageContent({
               </div>
               <div className="offer__rating rating">
                 <div className="offer__stars rating__stars">
-                  <span style={{ width: `${20 * offer.rating}%` }}></span>
+                  <span style={{ width: getRatingWidth(offer.rating) }}></span>
                   <span className="visually-hidden">Rating</span>
                 </div>
                 <span className="offer__rating-value rating__value">
@@ -137,14 +146,13 @@ function OfferPageContent({
               </div>
               <ul className="offer__features">
                 <li className="offer__feature offer__feature--entire">
-                  {offer.type}
+                  {formatOfferType(offer.type)}
                 </li>
                 <li className="offer__feature offer__feature--bedrooms">
-                  {offer.bedrooms}&nbsp;
-                  {offer.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}
+                  {`${offer.bedrooms} ${offer.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}`}
                 </li>
                 <li className="offer__feature offer__feature--adults">
-                  Max {offer.maxAdults} adults
+                  {`Max ${offer.maxAdults} ${offer.maxAdults === 1 ? 'adult' : 'adults'}`}
                 </li>
               </ul>
               <div className="offer__price">
@@ -186,7 +194,11 @@ function OfferPageContent({
                   )}
                 </div>
                 <div className="offer__description">
-                  <p className="offer__text">{offer.description}</p>
+                  {descriptionParagraphs.map((match) => (
+                    <p className="offer__text" key={match.index}>
+                      {match[0]}
+                    </p>
+                  ))}
                 </div>
               </div>
               <OfferReviews offerId={offer.id} initialReviews={reviews} />
@@ -217,7 +229,12 @@ function OfferPageLoader({ id }: { id: string }): JSX.Element {
   }, [dispatch, id]);
 
   if (result === null) {
-    return <Spinner />;
+    return (
+      <div className="page">
+        <Header />
+        <Spinner />
+      </div>
+    );
   }
 
   if ('data' in result) {
@@ -229,13 +246,17 @@ function OfferPageLoader({ id }: { id: string }): JSX.Element {
   }
 
   return (
-    <p className="container" role="alert">
-      Could not load this place. Please refresh the page to try again.
-    </p>
+    <div className="page">
+      <Header />
+      <p className="container" role="alert">
+        Could not load this place. Please refresh the page to try again.
+      </p>
+    </div>
   );
 }
 
 function OfferPage(): JSX.Element {
+  usePageTitle('6 cities: offer');
   const { id } = useParams();
   const authorizationStatus = useAppSelector(getAuthorizationStatus);
 

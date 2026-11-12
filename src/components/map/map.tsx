@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 
 type MapProps = {
   city: City;
-  offers: OfferPreview[];
+  offers: Pick<OfferPreview, 'id' | 'location'>[];
   activeOfferId?: string | null;
   className?: string;
 };

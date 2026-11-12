@@ -62,38 +62,24 @@ function Header(): JSX.Element {
             <nav className="header__nav">
               <ul className="header__nav-list">
                 <li className="header__nav-item user">
-                  {user ? (
-                    <Link
-                      className="header__nav-link header__nav-link--profile"
-                      to={AppRoute.Favorites}
-                    >
-                      <div className="header__avatar-wrapper user__avatar-wrapper">
-                        <img
-                          className="user__avatar"
-                          src={user.avatarUrl}
-                          width="20"
-                          height="20"
-                          alt=""
-                        />
-                      </div>
-                      <span className="header__user-name user__name">
-                        {user.email}
-                      </span>
-                      {favoritesStatus === 'succeeded' ? (
+                  <Link
+                    className="header__nav-link header__nav-link--profile"
+                    to={user ? AppRoute.Favorites : AppRoute.Login}
+                  >
+                    <div className="header__avatar-wrapper user__avatar-wrapper" />
+                    {user ? (
+                      <>
+                        <span className="header__user-name user__name">
+                          {user.email}
+                        </span>
                         <span className="header__favorite-count">
                           {favoriteCount}
                         </span>
-                      ) : null}
-                    </Link>
-                  ) : (
-                    <Link
-                      className="header__nav-link header__nav-link--profile"
-                      to={AppRoute.Login}
-                    >
-                      <div className="header__avatar-wrapper user__avatar-wrapper" />
+                      </>
+                    ) : (
                       <span className="header__login">Sign in</span>
-                    </Link>
-                  )}
+                    )}
+                  </Link>
                 </li>
 
                 {user ? (

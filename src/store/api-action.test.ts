@@ -2,10 +2,12 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { StatusCodes } from 'http-status-codes';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { AuthorizationStatus } from '../const';
+import { dropToken, getToken, saveToken } from '../services/token';
 import { offer, offerPreview, review, user } from '../test/fixtures';
 import { createTestStore } from '../test/test-store';
 import { setAuthorization } from './action';
-import { fetchFavorites, fetchOfferDetails, fetchOffers, postComment, setFavoriteStatus } from './api-action';
+import { checkAuth, fetchFavorites, fetchOfferDetails, fetchOffers, logout, postComment, setFavoriteStatus } from './api-action';
 
 const offerId = 'paris/loft';
 const detailsPath = '/offers/paris%2Floft';
@@ -24,6 +26,49 @@ describe('API actions', () => {
 
   afterEach(() => {
     mock.restore();
+    dropToken();
+  });
+
+  describe('checkAuth', () => {
+    it('restores the user profile and saves the token returned by the server', async () => {
+      const token = 'restored-session-token';
+      mock.onGet('/login').replyOnce(StatusCodes.OK, { ...user, token });
+
+      await store.dispatch(checkAuth()).unwrap();
+
+      expect(store.getState().user).toMatchObject({ authorizationStatus: AuthorizationStatus.Auth, profile: user });
+      expect(getToken()).toBe(token);
+    });
+
+    it('clears an expired session when the server returns 401', async () => {
+      saveToken('expired-session-token');
+      mock.onGet('/login').replyOnce(StatusCodes.UNAUTHORIZED);
+
+      await store.dispatch(checkAuth()).unwrap();
+
+      expect(store.getState().user.authorizationStatus).toBe(AuthorizationStatus.NoAuth);
+      expect(getToken()).toBeNull();
+    });
+
+    it('records a network error during the authorization check', async () => {
+      mock.onGet('/login').networkErrorOnce();
+
+      await expect(store.dispatch(checkAuth()).unwrap()).rejects.toMatchObject({ message: 'Network Error' });
+      expect(store.getState().user.hasAuthCheckError).toBe(true);
+    });
+  });
+
+  describe('logout', () => {
+    it('clears the local session if the server already considers it expired', async () => {
+      store.dispatch(setAuthorization(user));
+      saveToken('expired-session-token');
+      mock.onDelete('/logout').replyOnce(StatusCodes.UNAUTHORIZED);
+
+      await store.dispatch(logout()).unwrap();
+
+      expect(store.getState().user.authorizationStatus).toBe(AuthorizationStatus.NoAuth);
+      expect(getToken()).toBeNull();
+    });
   });
 
   describe('fetchOffers', () => {
@@ -68,6 +113,21 @@ describe('API actions', () => {
 
       expect(action.meta).toMatchObject({ requestStatus: 'rejected', condition: true });
       expect(mock.history.get).toHaveLength(0);
+    });
+
+    it('reuses an in-flight load and lets the page fetch again after it finishes', async () => {
+      const favorites = [{ ...offerPreview, isFavorite: true }];
+      store.dispatch(setAuthorization(user));
+      mock.onGet('/favorite').replyOnce(StatusCodes.OK, []);
+      mock.onGet('/favorite').replyOnce(StatusCodes.OK, favorites);
+
+      const firstLoad = store.dispatch(fetchFavorites());
+      const skippedRefresh = await store.dispatch(fetchFavorites('refresh'));
+      expect(skippedRefresh.meta).toMatchObject({ requestStatus: 'rejected', condition: true });
+      await firstLoad.unwrap();
+
+      await expect(store.dispatch(fetchFavorites('refresh')).unwrap()).resolves.toEqual(favorites);
+      expect(mock.history.get).toHaveLength(2);
     });
   });
 

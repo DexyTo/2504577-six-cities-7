@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, Outlet } from 'react-router-dom';
 import MainPage from './pages/main-page/main-page';
 import LoginPage from './pages/login-page/login-page';
 import FavoritesPage from './pages/favorites-page/favorites-page';
 import OfferPage from './pages/offer-page/offer-page';
 import NotFoundPage from './pages/not-found-page/not-found-page';
+import Header from './components/header/header';
 import PrivateRoute from './components/private-route/private-route';
 import Spinner from './components/spinner/spinner';
 import { AppRoute, AuthorizationStatus } from './const';
@@ -15,16 +16,6 @@ import {
   getHasAuthCheckError,
   getOffersStatus,
 } from './store/selectors';
-
-const offersOutlets = {
-  loading: <Spinner />,
-  succeeded: <Outlet />,
-  failed: (
-    <p className="container" role="alert">
-      Could not load places to stay. Please refresh the page to try again.
-    </p>
-  ),
-};
 
 function OffersLoader(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -40,7 +31,22 @@ function OffersLoader(): JSX.Element {
     return () => request.abort();
   }, [authorizationStatus, dispatch]);
 
-  return offersOutlets[offersStatus];
+  if (offersStatus === 'succeeded') {
+    return <Outlet />;
+  }
+
+  return (
+    <div className="page page--gray">
+      <Header />
+      {offersStatus === 'loading' ? (
+        <Spinner />
+      ) : (
+        <p className="container" role="alert">
+          Could not load places to stay. Please refresh the page to try again.
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function App(): JSX.Element {
@@ -76,7 +82,8 @@ export default function App(): JSX.Element {
         />
         <Route path={AppRoute.Login} element={<LoginPage />} />
         <Route path={AppRoute.Offer} element={<OfferPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path={AppRoute.NotFound} element={<NotFoundPage />} />
+        <Route path="*" element={<Navigate to={AppRoute.NotFound} replace />} />
       </Routes>
     </BrowserRouter>
   );

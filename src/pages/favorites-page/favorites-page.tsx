@@ -1,21 +1,33 @@
 import cn from 'classnames';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/header/header';
 import PlaceCardsList from '../../components/place-cards-list/place-cards-list';
 import Spinner from '../../components/spinner/spinner';
 import { AppRoute } from '../../const';
-import { useAppSelector } from '../../hooks';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { usePageTitle } from '../../hooks/use-page-title';
+import { changeCity } from '../../store/action';
+import { fetchFavorites } from '../../store/api-action';
 import {
   getFavoriteOffersByCity,
   getFavoritesStatus,
+  getHasLoadedFavorites,
 } from '../../store/selectors';
 
 function FavoritesPage(): JSX.Element {
+  const dispatch = useAppDispatch();
   const favoriteOffersByCity = useAppSelector(getFavoriteOffersByCity);
   const favoritesStatus = useAppSelector(getFavoritesStatus);
-  const isLoading = favoritesStatus === 'idle' || favoritesStatus === 'loading';
-  const isEmpty =
-    favoritesStatus === 'succeeded' && favoriteOffersByCity.length === 0;
+  const hasLoaded = useAppSelector(getHasLoadedFavorites);
+  const isLoading =
+    !hasLoaded && (favoritesStatus === 'idle' || favoritesStatus === 'loading');
+  const isEmpty = hasLoaded && favoriteOffersByCity.length === 0;
+  usePageTitle(isEmpty ? '6 cities: favorites empty' : '6 cities: favorites');
+
+  useEffect(() => {
+    void dispatch(fetchFavorites('refresh'));
+  }, [dispatch]);
 
   return (
     <div className={cn('page', { 'page--favorites-empty': isEmpty })}>
@@ -41,15 +53,19 @@ function FavoritesPage(): JSX.Element {
                 </p>
               </div>
             ) : null}
-            {favoritesStatus === 'succeeded' && !isEmpty ? (
+            {favoriteOffersByCity.length > 0 ? (
               <ul className="favorites__list">
                 {favoriteOffersByCity.map(([city, offers]) => (
                   <li key={city} className="favorites__locations-items">
                     <div className="favorites__locations locations locations--current">
                       <div className="locations__item">
-                        <a className="locations__item-link" href="#">
+                        <Link
+                          className="locations__item-link"
+                          to={AppRoute.Main}
+                          onClick={() => dispatch(changeCity(offers[0].city))}
+                        >
                           <span>{city}</span>
-                        </a>
+                        </Link>
                       </div>
                     </div>
                     <PlaceCardsList offers={offers} typeCard="favorites" />
@@ -60,7 +76,7 @@ function FavoritesPage(): JSX.Element {
           </section>
         </div>
       </main>
-      <footer className="footer container">
+      <footer className={cn('footer', { container: !isEmpty })}>
         <Link className="footer__logo-link" to={AppRoute.Main}>
           <img
             className="footer__logo"

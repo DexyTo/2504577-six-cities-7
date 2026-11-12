@@ -1,4 +1,5 @@
 import type { ReviewData } from '../../const';
+import { getRatingWidth } from '../../utils/rating';
 
 type ReviewProps = {
   review: ReviewData;
@@ -28,7 +29,7 @@ function Review({ review }: ReviewProps): JSX.Element {
       <div className="reviews__info">
         <div className="reviews__rating rating">
           <div className="reviews__stars rating__stars">
-            <span style={{ width: `${20 * review.rating}%` }}></span>
+            <span style={{ width: getRatingWidth(review.rating) }}></span>
             <span className="visually-hidden">Rating</span>
           </div>
         </div>

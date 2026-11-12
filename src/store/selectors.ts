@@ -16,6 +16,7 @@ export const getIsAuthRequestPending = (state: State) =>
 const getFavoriteItems = (state: State) => state.favorites.items;
 
 export const getFavoritesStatus = (state: State) => state.favorites.status;
+export const getHasLoadedFavorites = (state: State) => state.favorites.hasLoaded;
 export const getHasFavoriteUpdateError = (state: State) =>
   state.favorites.hasUpdateError;
 export const getIsFavoriteUpdatePending = (state: State, offerId: string) =>
@@ -32,7 +33,7 @@ export function getIsFavorite(
 
   const favorite = getFavoriteItems(state)[offerId];
   return favorite === undefined
-    ? getFavoritesStatus(state) !== 'succeeded' && initialStatus
+    ? !getHasLoadedFavorites(state) && initialStatus
     : favorite !== null;
 }
 

@@ -96,6 +96,24 @@ describe('ReviewsList', () => {
     expect(screen.getByText(review.comment)).toBeInTheDocument();
     expect(screen.getByText(secondReview.comment)).toBeInTheDocument();
   });
+
+  it('shows the ten most recent reviews and counts every review', () => {
+    const reviews = Array.from({ length: 12 }, (_, index) => ({
+      ...review,
+      id: `review-${index + 1}`,
+      comment: `Review ${index + 1}`,
+      date: new Date(Date.UTC(2024, 4, index + 1)).toISOString(),
+    }));
+    const shuffled = [...reviews.slice(6), ...reviews.slice(0, 6)];
+
+    render(<ReviewsList reviews={shuffled} />);
+
+    const renderedComments = screen.getAllByRole('listitem').map((item) =>
+      within(item).getByText(/^Review \d+$/).textContent,
+    );
+    expect(screen.getByRole('heading', { name: 'Reviews · 12' })).toBeInTheDocument();
+    expect(renderedComments).toEqual(reviews.slice(2).reverse().map(({ comment }) => comment));
+  });
 });
 
 describe('PlaceCard', () => {
@@ -105,8 +123,14 @@ describe('PlaceCard', () => {
     expect(screen.getByRole('img', { name: offerPreview.title })).toHaveAttribute('src', offerPreview.previewImage);
     expect(screen.getByRole('heading', { name: offerPreview.title })).toBeInTheDocument();
     expect(screen.getByText(`€${offerPreview.price}`)).toBeInTheDocument();
-    expect(screen.getByText(offerPreview.type)).toBeInTheDocument();
+    expect(screen.getByText('Apartment')).toBeInTheDocument();
     expect(screen.getByText('Premium')).toBeInTheDocument();
+  });
+
+  it.each([[3.1, '60%'], [4.5, '100%']])('rounds a rating of %s to whole stars', (rating, width) => {
+    const { container } = renderWithStore(<PlaceCard offerData={{ ...offerPreview, rating }} />);
+
+    expect(container.querySelector('.place-card__stars > span')).toHaveStyle({ width });
   });
 
   it('opens the offer when the title is clicked', async () => {
@@ -220,7 +244,9 @@ describe('Header', () => {
     store.dispatch(setAuthorization(user));
     renderWithStore(<Header />, store);
 
-    expect(screen.getByRole('link', { name: user.email })).toHaveAttribute('href', AppRoute.Favorites);
+    const profile = screen.getByRole('link', { name: `${user.email} 0` });
+    expect(profile).toHaveAttribute('href', AppRoute.Favorites);
+    expect(profile.querySelector('.header__avatar-wrapper')).toBeEmptyDOMElement();
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled();
   });
 
@@ -251,7 +277,7 @@ describe('Header', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not sign out');
     expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled();
-    expect(screen.getByRole('link', { name: user.email })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: `${user.email} 0` })).toBeInTheDocument();
   });
 });
 
@@ -269,7 +295,10 @@ describe('CommentForm', () => {
     const visitor = userEvent.setup();
     const onCommentPosted = vi.fn();
     store.dispatch(setAuthorization(user));
-    mock.onPost(`/comments/${offerPreview.id}`).replyOnce(StatusCodes.CREATED, review);
+    let finishRequest = () => {};
+    mock.onPost(`/comments/${offerPreview.id}`).replyOnce(() => new Promise((resolve) => {
+      finishRequest = () => resolve([StatusCodes.CREATED, review]);
+    }));
     renderWithStore(<CommentForm offerId={offerPreview.id} onCommentPosted={onCommentPosted} />, store);
     const submit = screen.getByRole('button', { name: 'Submit' });
     const input = screen.getByRole('textbox', { name: 'Your review' });
@@ -282,6 +311,11 @@ describe('CommentForm', () => {
     await visitor.type(input, `  ${review.comment}  `);
     expect(submit).toBeEnabled();
     await visitor.click(submit);
+
+    expect(submit).toBeDisabled();
+    expect(input).toBeDisabled();
+    screen.getAllByRole('radio').forEach((star) => expect(star).toBeDisabled());
+    finishRequest();
 
     await waitFor(() => expect(onCommentPosted).toHaveBeenCalledWith(review));
     expect(mock.history.post).toMatchObject([{

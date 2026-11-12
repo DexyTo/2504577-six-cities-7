@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { getOfferRoute, type OfferPreview } from '../../const';
+import { formatOfferType } from '../../utils/format-offer-type';
+import { getRatingWidth } from '../../utils/rating';
 import BookmarkButton from '../bookmark-button/bookmark-button';
 
 export type PlaceCardType = 'cities' | 'favorites' | 'near-places';
@@ -62,14 +64,14 @@ function PlaceCard({
         </div>
         <div className="place-card__rating rating">
           <div className="place-card__stars rating__stars">
-            <span style={{ width: `${20 * offerData.rating}%` }}></span>
+            <span style={{ width: getRatingWidth(offerData.rating) }}></span>
             <span className="visually-hidden">Rating</span>
           </div>
         </div>
         <h2 className="place-card__name">
           <Link to={getOfferRoute(offerData.id)}>{offerData.title}</Link>
         </h2>
-        <p className="place-card__type">{offerData.type}</p>
+        <p className="place-card__type">{formatOfferType(offerData.type)}</p>
       </div>
     </article>
   );

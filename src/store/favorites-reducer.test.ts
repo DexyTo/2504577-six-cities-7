@@ -8,7 +8,9 @@ describe('favoritesReducer', () => {
   const initialState = {
     items: {},
     status: 'idle',
+    hasLoaded: false,
     requestId: null,
+    updatesDuringFetch: {},
     pendingUpdates: {},
     hasUpdateError: false,
   };
@@ -32,7 +34,7 @@ describe('favoritesReducer', () => {
     const loading = favoritesReducer(undefined, fetchFavorites.pending(requestId, undefined));
     const state = favoritesReducer(loading, fetchFavorites.fulfilled([favorite], requestId, undefined));
 
-    expect(state).toEqual({ ...initialState, items: { [offerId]: favorite }, status: 'succeeded' });
+    expect(state).toEqual({ ...initialState, items: { [offerId]: favorite }, status: 'succeeded', hasLoaded: true });
   });
 
   it('records a failure for the current favorites request', () => {
@@ -51,7 +53,17 @@ describe('favoritesReducer', () => {
     );
     const state = favoritesReducer(removed, fetchFavorites.fulfilled([favorite], requestId, undefined));
 
-    expect(state).toEqual({ ...initialState, items: { [offerId]: null }, status: 'succeeded' });
+    expect(state).toEqual({ ...initialState, items: { [offerId]: null }, status: 'succeeded', hasLoaded: true });
+  });
+
+  it('replaces the previous snapshot with the latest server response', () => {
+    const loading = favoritesReducer(undefined, fetchFavorites.pending(requestId, undefined));
+    const loaded = favoritesReducer(loading, fetchFavorites.fulfilled([favorite], requestId, undefined));
+    const refreshing = favoritesReducer(loaded, fetchFavorites.pending('refresh-request', 'refresh'));
+    const refreshed = favoritesReducer(refreshing, fetchFavorites.fulfilled([], 'refresh-request', 'refresh'));
+
+    expect(refreshing.items).toEqual({ [offerId]: favorite });
+    expect(refreshed).toEqual({ ...initialState, status: 'succeeded', hasLoaded: true });
   });
 
   it('tracks an update and adds the returned favorite', () => {

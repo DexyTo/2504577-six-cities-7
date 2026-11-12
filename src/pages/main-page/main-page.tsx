@@ -58,7 +58,7 @@ function MainPage(): JSX.Element {
               <section className="cities__places places">
                 <h2 className="visually-hidden">Places</h2>
                 <b className="places__found">
-                  {cityOffers.length} places to stay in {city.name}
+                  {`${cityOffers.length} places to stay in ${city.name}`}
                 </b>
                 <SortingOptions
                   sortType={sortType}

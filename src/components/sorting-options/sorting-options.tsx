@@ -53,7 +53,7 @@ function SortingOptions({
         }
       }}
     >
-      <span className="places__sorting-caption">Sort by </span>
+      <span className="places__sorting-caption">Sort by</span>&nbsp;
       <button
         className="places__sorting-type button"
         type="button"
